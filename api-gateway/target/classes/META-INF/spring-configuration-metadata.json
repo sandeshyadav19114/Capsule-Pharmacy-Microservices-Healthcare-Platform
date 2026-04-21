@@ -1,0 +1,17 @@
+{
+  "groups": [
+    {
+      "name": "gateway",
+      "type": "com.apigateway.GatewayConfig",
+      "sourceType": "com.apigateway.GatewayConfig"
+    }
+  ],
+  "properties": [
+    {
+      "name": "gateway.public-paths",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.apigateway.GatewayConfig"
+    }
+  ],
+  "hints": []
+}

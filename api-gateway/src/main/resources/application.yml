@@ -1,0 +1,122 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: API-GATEWAY
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      # Global CORS configuration
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+      routes:
+        # ── User / Auth Service ───────────────────────────────────────────────
+        - id: user-service
+          uri: lb://USER-LOGIN-SIGNUP
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
+        # ── Doctor Service ────────────────────────────────────────────────────
+        - id: doctor-service
+          uri: lb://DOCTOR-SERVICE
+          predicates:
+            - Path=/api/doctors/**
+          filters:
+            - StripPrefix=0
+            - name: AuthFilter
+
+        # ── Patient Service ───────────────────────────────────────────────────
+        - id: patient-service
+          uri: lb://PATIENT-SERVICE
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - StripPrefix=0
+            - name: AuthFilter
+
+        # ── Booking Service ───────────────────────────────────────────────────
+        - id: booking-service
+          uri: lb://BOOKING-SERVICE
+          predicates:
+            - Path=/api/appointments/**
+          filters:
+            - StripPrefix=0
+            - name: AuthFilter
+
+        # ── Payment Service ───────────────────────────────────────────────────
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=0
+            - name: AuthFilter
+
+        # ── Pharmacy Service ──────────────────────────────────────────────────
+        - id: pharmacy-service-medicines
+          uri: lb://PHARMACY-SERVICE
+          predicates:
+            - Path=/api/medicines/**
+          filters:
+            - StripPrefix=0
+
+        - id: pharmacy-service-auth
+          uri: lb://PHARMACY-SERVICE
+          predicates:
+            - Path=/api/prescriptions/**, /api/cart/**, /api/orders/**
+          filters:
+            - StripPrefix=0
+            - name: AuthFilter
+
+        # ── Notification Service ──────────────────────────────────────────────
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - StripPrefix=0
+            - name: AuthFilter
+
+# JWT secret (must match all services)
+jwt:
+  secret: capsule-pharmacy-secret-key-very-long-and-secure-256-bit-key-here
+
+# Public paths that bypass JWT filter
+gateway:
+  public-paths:
+    - /api/auth/register
+    - /api/auth/login
+    - /api/medicines
+    - /api/medicines/**
+    - /swagger-ui/**
+    - /v3/api-docs/**
+    - /actuator/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true
