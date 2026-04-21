@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTIFICATION-SERVICE.yml — Config for NotificationApplication (port 8086)
+# ─────────────────────────────────────────────────────────────────────────────
+
+server:
+  port: 8086
+
+spring:
+  application:
+    name: NOTIFICATION-SERVICE
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/notification_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  # SMTP email config
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:capsulepharmacy@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          timeout: 5000
+          connection-timeout: 5000
+
+  kafka:
+    consumer:
+      group-id: notification-group
+
+notification:
+  email:
+    from: noreply@capsulepharmacy.com
+    from-name: Capsule Pharmacy
+  reminder:
+    hours-before: 24

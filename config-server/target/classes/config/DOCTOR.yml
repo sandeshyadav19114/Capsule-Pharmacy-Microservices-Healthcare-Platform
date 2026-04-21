@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DOCTOR.yml — Config for DoctorApplication (port 8081)
+# ─────────────────────────────────────────────────────────────────────────────
+
+server:
+  port: 8081
+
+spring:
+  application:
+    name: DOCTOR
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/doctor_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

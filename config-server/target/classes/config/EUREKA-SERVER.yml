@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# EUREKA-SERVER.yml — Config for EurekaServerApplication (port 8761)
+# ─────────────────────────────────────────────────────────────────────────────
+
+server:
+  port: 8761
+
+spring:
+  application:
+    name: EUREKA-SERVER
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # Eureka server does NOT register with itself
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    # Disable self-preservation in dev (services de-register immediately)
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 3000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

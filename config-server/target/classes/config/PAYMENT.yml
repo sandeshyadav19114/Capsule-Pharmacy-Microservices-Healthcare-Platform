@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# PAYMENT.yml — Config for PaymentApplication (port 8084)
+# ─────────────────────────────────────────────────────────────────────────────
+
+server:
+  port: 8084
+
+spring:
+  application:
+    name: PAYMENT
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/payment_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+# Payment gateway config (Razorpay / Stripe)
+payment:
+  gateway:
+    provider: razorpay                           # razorpay | stripe
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID:test_key_id}
+      key-secret: ${RAZORPAY_KEY_SECRET:test_secret}
+      currency: INR
+    stripe:
+      secret-key: ${STRIPE_SECRET_KEY:sk_test_xxx}
+      currency: inr
+  # Timeout for gateway callback (in seconds)
+  callback-timeout: 300
+
+# Resilience4j — retry on payment gateway API calls
+resilience4j:
+  retry:
+    instances:
+      paymentGateway:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+
+feign:
+  client:
+    config:
+      pharmacy-service:
+        connect-timeout: 5000
+        read-timeout: 5000
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
