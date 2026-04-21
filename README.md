@@ -253,5 +253,5 @@ open target/site/jacoco/index.html
 
 ---
 
-*Built with ❤️ — Sandesh Yadav | github.com/sandeshyadav19114/capsule-pharmacy*
+*Built with ❤️ — Sandesh Yadav | https://github.com/sandeshyadav19114/Capsule-Pharmacy-Microservices-Healthcare-Platform *
 # Capsule-Pharmacy-Microservices-Healthcare-Platform
