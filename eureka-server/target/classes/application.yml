@@ -1,0 +1,24 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: EUREKA-SERVER
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false   # Eureka server does not register itself
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    wait-time-in-ms-when-sync-empty: 0
+    enable-self-preservation: false  # Disable in dev (enable in prod)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
