@@ -1,0 +1,30 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: PATIENT-SERVICE
+  datasource:
+    url: jdbc:mysql://localhost:3306/patient_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: Sandesh19
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: capsule-pharmacy-secret-key-very-long-and-secure-256-bit-key-here
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
