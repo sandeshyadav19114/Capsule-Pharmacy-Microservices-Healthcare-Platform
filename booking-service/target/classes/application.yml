@@ -1,0 +1,68 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: BOOKING-SERVICE
+  datasource:
+    url: jdbc:mysql://localhost:3306/booking_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: Sandesh19
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: booking-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: capsule-pharmacy-secret-key-very-long-and-secure-256-bit-key-here
+
+kafka:
+  topics:
+    appointment-booked: appointment-booked-topic
+    appointment-cancelled: appointment-cancelled-topic
+    appointment-reminder: appointment-reminder-topic
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      doctorService:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents
+  health:
+    circuitbreakers:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

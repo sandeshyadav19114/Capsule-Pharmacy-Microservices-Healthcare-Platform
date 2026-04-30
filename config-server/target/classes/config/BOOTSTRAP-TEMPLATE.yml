@@ -1,0 +1,29 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# bootstrap.yml — ADD THIS FILE to src/main/resources/ in EVERY microservice
+#
+# This file is loaded BEFORE application.yml.
+# It tells the service WHERE to find Config Server.
+# Replace BOOKING with the actual service name in each service.
+# ─────────────────────────────────────────────────────────────────────────────
+
+spring:
+  application:
+    name: BOOKING   # ← Change this per service:
+                    #   EUREKA-SERVER, API-MICROSERVICES, DOCTOR,
+                    #   PATIENT, BOOKING, PAYMENT, USER-LOGIN-SIGNUP,
+                    #   PHARMACY-SERVICE, NOTIFICATION-SERVICE
+
+  config:
+    import: "configserver:http://localhost:8888"
+
+  cloud:
+    config:
+      uri: http://localhost:8888
+      username: configuser
+      password: configpass123
+      fail-fast: true    # Fail startup if Config Server unreachable
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
+        multiplier: 1.1

@@ -1,0 +1,17 @@
+package com.pharmacy.enums;
+
+public enum MedicineCategory {
+    ANTIBIOTIC,
+    ANALGESIC,
+    ANTIVIRAL,
+    ANTIFUNGAL,
+    ANTIHISTAMINE,
+    ANTACID,
+    VITAMIN_SUPPLEMENT,
+    CARDIOVASCULAR,
+    DIABETES,
+    DERMATOLOGY,
+    RESPIRATORY,
+    NEUROLOGICAL,
+    GENERAL_OTC
+}

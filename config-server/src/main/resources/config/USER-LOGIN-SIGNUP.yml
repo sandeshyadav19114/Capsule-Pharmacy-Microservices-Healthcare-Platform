@@ -1,0 +1,44 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# USER-LOGIN-SIGNUP.yml — Config for UserLoginSignupApplication (port 8087)
+# This service is the ONLY service that ISSUES JWT tokens.
+# All other services only VALIDATE them using the shared jwt.secret.
+# ─────────────────────────────────────────────────────────────────────────────
+
+server:
+  port: 8087
+
+spring:
+  application:
+    name: USER-LOGIN-SIGNUP
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/user_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+# JWT config — token issuance settings (secret inherited from shared application.yml)
+jwt:
+  expiration: 86400000          # 24 hours in milliseconds
+  refresh-expiration: 604800000  # 7 days for refresh tokens
+
+# BCrypt password encoder strength
+security:
+  bcrypt:
+    strength: 12
+
+# User roles
+roles:
+  allowed: PATIENT,DOCTOR,ADMIN
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

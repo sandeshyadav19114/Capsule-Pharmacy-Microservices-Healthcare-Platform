@@ -1,0 +1,33 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: CONFIG-SERVER
+
+  cloud:
+    config:
+      server:
+        native:
+          # Config files stored in src/main/resources/config/
+          search-locations: classpath:/config/
+      # To use Git instead of native filesystem, uncomment:
+      # git:
+      #   uri: https://github.com/your-org/capsule-pharmacy-config
+      #   default-label: main
+
+  profiles:
+    active: native
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh

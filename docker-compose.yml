@@ -1,0 +1,218 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Capsule Pharmacy — Full Docker Compose
+# Startup order: mysql → kafka → eureka → config-server → api-gateway → services
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
+  mysql:
+    image: mysql:8.0
+    container_name: capsule-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: capsule-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: capsule-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: capsule-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "9093:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+  # ── Core Services ────────────────────────────────────────────────────────────
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: capsule-eureka
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      retries: 5
+
+  config-server:
+    build: ./config-server
+    container_name: capsule-config
+    ports:
+      - "8888:8888"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: capsule-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  # ── Microservices ────────────────────────────────────────────────────────────
+
+  user-service:
+    build: ./user-service
+    container_name: capsule-user
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  doctor-service:
+    build: ./doctor-service
+    container_name: capsule-doctor
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/doctor_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  booking-service:
+    build: ./booking-service
+    container_name: capsule-booking
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/booking_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  patient-service:
+    build: ./patient-service
+    container_name: capsule-patient
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/patient_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+  pharmacy-service:
+    build: ./pharmacy-service
+    container_name: capsule-pharmacy
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pharmacy_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+
+  notification-service:
+    build: ./notification-service
+    container_name: capsule-notification
+    ports:
+      - "8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/notification_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+  payment-service:
+    build: ./payment-service
+    container_name: capsule-payment
+    ports:
+      - "8087:8087"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/payment_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+volumes:
+  mysql_data:
